@@ -123,7 +123,7 @@ variable "docker_port" {
 variable "admin_password_secret_id" {
   description = "Secrets Manager secret name holding the initial Nexus admin password (fetched by the instance at boot)"
   type        = string
-  default     = "/prod/sonatype_nexus/admin_password"
+  default     = "/prod/sonatype_nexus/apw"
 }
 
 variable "additional_env_vars" {
