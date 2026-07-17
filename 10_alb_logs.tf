@@ -4,7 +4,7 @@
 
 locals {
   alb_logs_enabled     = var.enable_alb_access_logs
-  alb_logs_bucket_name = var.alb_logs_bucket_name != null ? var.alb_logs_bucket_name : lower("${var.name_prefix}-alb-logs-${random_id.alb_logs_suffix[0].hex}")
+  alb_logs_bucket_name = var.alb_logs_bucket_name != null ? var.alb_logs_bucket_name : lower("${var.name_prefix}-alb-logs-${var.external_random_id}")
   # S3 key prefix under which the ALB writes its logs.
   alb_log_prefix = var.name_prefix
 }
@@ -17,10 +17,6 @@ data "aws_caller_identity" "current" {}
 data "aws_elb_service_account" "main" {}
 
 # Stable random suffix for the auto-named log bucket.
-resource "random_id" "alb_logs_suffix" {
-  count       = local.alb_logs_enabled ? 1 : 0
-  byte_length = 4
-}
 
 resource "aws_s3_bucket" "alb_logs" {
   count  = local.alb_logs_enabled ? 1 : 0

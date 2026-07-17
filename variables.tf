@@ -1,3 +1,8 @@
+
+variable "external_random_id" {
+  description = "Random ID used to generate unique resource names"
+  type        = string
+}
 variable "route53_zone_name" {
   description = "The name of the Route 53 hosted zone to create the ALIAS record in"
   type        = string

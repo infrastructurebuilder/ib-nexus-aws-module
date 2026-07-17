@@ -3,14 +3,10 @@ locals {
   # Append a stable random suffix to the prefix and force lowercase for S3
   # compliance. Using random_id (not timestamp()) keeps the name stable across
   # applies so the artifact bucket is never replaced.
-  blobstore_bucket_name = var.blobstore_bucket_name != null ? var.blobstore_bucket_name : lower("${var.blobstore_bucket_prefix}-${random_id.blobstore_suffix.hex}")
+  blobstore_bucket_name = var.blobstore_bucket_name != null ? var.blobstore_bucket_name : lower("${var.blobstore_bucket_prefix}-${var.external_random_id}")
 }
 
 # Stable, randomly-generated suffix for the auto-named blobstore bucket.
-resource "random_id" "blobstore_suffix" {
-  byte_length = 4
-}
-
 resource "aws_s3_bucket" "nexus_blobstore" {
   bucket = local.blobstore_bucket_name
 
