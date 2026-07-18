@@ -21,7 +21,7 @@ data "aws_elb_service_account" "main" {}
 resource "aws_s3_bucket" "alb_logs" {
   count  = local.alb_logs_enabled ? 1 : 0
   bucket = local.alb_logs_bucket_name
-
+  force_destroy = true
   tags = {
     Name   = "${var.name_prefix}-alb-logs"
     system = "nexus"
