@@ -17,7 +17,7 @@ data "aws_elb_service_account" "main" {}
 # ALB access logs only support SSE-S3 (AES256), not customer-managed KMS keys.
 resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
   count  = local.alb_logs_enabled ? 1 : 0
-  bucket = aws_s3_bucket.alb_logs[0].id
+  bucket = data.aws_s3_bucket.alb_logs.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -29,7 +29,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
 # Expire old access logs.
 resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
   count  = local.alb_logs_enabled ? 1 : 0
-  bucket = data.aws_s3_bucket.alb_logs[0].id
+  bucket = data.aws_s3_bucket.alb_logs.id
 
   rule {
     id     = "expire-alb-logs"
@@ -46,7 +46,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
 # Allow the regional ELB account to write access logs into the bucket.
 resource "aws_s3_bucket_policy" "alb_logs" {
   count  = local.alb_logs_enabled ? 1 : 0
-  bucket = aws_s3_bucket.alb_logs[0].id
+  bucket = data.aws_s3_bucket.alb_logs.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -56,7 +56,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         Effect    = "Allow"
         Principal = { AWS = data.aws_elb_service_account.main.arn }
         Action    = "s3:PutObject"
-        Resource  = "${data.aws_s3_bucket.alb_logs[0].arn}/${local.alb_log_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Resource  = "${data.aws_s3_bucket.alb_logs.arn}/${local.alb_log_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
       }
     ]
   })

@@ -15,7 +15,7 @@ resource "aws_lb" "nexus_alb" {
   dynamic "access_logs" {
     for_each = var.enable_alb_access_logs ? [1] : []
     content {
-      bucket  = aws_s3_bucket.alb_logs[0].id
+      bucket  = data.aws_s3_bucket.alb_logs.id
       prefix  = var.name_prefix
       enabled = true
     }
