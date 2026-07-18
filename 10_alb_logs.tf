@@ -3,10 +3,8 @@
 # ==============================================================================
 
 locals {
-  alb_logs_enabled     = var.enable_alb_access_logs
-  alb_logs_bucket_name = var.alb_logs_bucket_name != null ? var.alb_logs_bucket_name : lower("${var.name_prefix}-alb-logs-${var.external_random_id}")
-  # S3 key prefix under which the ALB writes its logs.
-  alb_log_prefix = var.name_prefix
+  alb_logs_enabled = var.enable_alb_access_logs
+  alb_log_prefix   = var.name_prefix
 }
 
 data "aws_caller_identity" "current" {}
@@ -15,29 +13,6 @@ data "aws_caller_identity" "current" {}
 # logs. (Used for standard regions; opt-in regions created after Aug 2022 use a
 # service principal instead — see the README note if you deploy there.)
 data "aws_elb_service_account" "main" {}
-
-# Stable random suffix for the auto-named log bucket.
-
-resource "aws_s3_bucket" "alb_logs" {
-  count  = local.alb_logs_enabled ? 1 : 0
-  bucket = local.alb_logs_bucket_name
-  force_destroy = true
-  tags = {
-    Name   = "${var.name_prefix}-alb-logs"
-    system = "nexus"
-  }
-}
-
-# Block all public access to the log bucket.
-resource "aws_s3_bucket_public_access_block" "alb_logs" {
-  count  = local.alb_logs_enabled ? 1 : 0
-  bucket = aws_s3_bucket.alb_logs[0].id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
 
 # ALB access logs only support SSE-S3 (AES256), not customer-managed KMS keys.
 resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
@@ -54,7 +29,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
 # Expire old access logs.
 resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
   count  = local.alb_logs_enabled ? 1 : 0
-  bucket = aws_s3_bucket.alb_logs[0].id
+  bucket = data.aws_s3_bucket.alb_logs[0].id
 
   rule {
     id     = "expire-alb-logs"
@@ -81,7 +56,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         Effect    = "Allow"
         Principal = { AWS = data.aws_elb_service_account.main.arn }
         Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.alb_logs[0].arn}/${local.alb_log_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Resource  = "${data.aws_s3_bucket.alb_logs[0].arn}/${local.alb_log_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
       }
     ]
   })

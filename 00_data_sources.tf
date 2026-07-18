@@ -2,6 +2,10 @@
 # 1. DATA SOURCES
 # ==============================================================================
 
+data "aws_s3_bucket" "alb_logs" {
+  bucket = var.alb_logs_bucket_name
+}
+
 data "aws_vpc" "main" {
   id = var.vpc_id
 }

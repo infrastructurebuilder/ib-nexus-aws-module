@@ -51,8 +51,6 @@ variable "enable_alb_access_logs" {
 variable "alb_logs_bucket_name" {
   description = "Name of the S3 bucket for ALB access logs (must be globally unique, or leave null to auto-generate from name_prefix)"
   type        = string
-  nullable    = true
-  default     = null
 }
 
 variable "alb_logs_retention_days" {
