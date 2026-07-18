@@ -85,10 +85,10 @@ output "waf_log_group_name" {
 # --- ALB Access Logs ---
 output "alb_logs_bucket_name" {
   description = "Name of the S3 bucket receiving ALB access logs. Null when enable_alb_access_logs is false."
-  value       = one(aws_s3_bucket.alb_logs[*].bucket)
+  value       = data.aws_s3_bucket.alb_logs.bucket)
 }
 
 output "alb_logs_bucket_arn" {
   description = "ARN of the S3 bucket receiving ALB access logs. Null when enable_alb_access_logs is false."
-  value       = var.alb_logs_bucket_name
+  value       = data.aws_s3_bucket.alb_logs.arn
 }
