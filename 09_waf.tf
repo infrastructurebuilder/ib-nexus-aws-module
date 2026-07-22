@@ -164,7 +164,7 @@ resource "aws_cloudwatch_log_group" "nexus_waf" {
   retention_in_days = var.waf_log_retention_days
 
   tags = {
-    Name   = "aws-waf-logs-${var.name_prefix}"
+    Name   = "${var.name_prefix}-aws-waf-logs"
     system = "nexus"
   }
 }

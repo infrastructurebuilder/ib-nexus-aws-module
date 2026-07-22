@@ -25,7 +25,7 @@ resource "aws_lb" "nexus_alb" {
   depends_on = [aws_s3_bucket_policy.alb_logs]
 
   tags = {
-    Name   = "nexus-public-alb"
+    Name   = "${var.name_prefix}-public-alb"
     system = "nexus"
   }
 }
@@ -69,7 +69,7 @@ resource "aws_lb_target_group" "nexus_docker_tg" {
   }
 
   tags = {
-    Name   = "nexus-docker-tg"
+    Name   = "${var.name_prefix}-docker-tg"
     system = "nexus"
   }
 }
@@ -90,7 +90,7 @@ resource "aws_lb_listener" "nexus_http_redirect" {
   }
 
   tags = {
-    Name   = "nexus-http-redirect-listener"
+    Name   = "${var.name_prefix}-redir-lstn"
     system = "nexus"
   }
 }
