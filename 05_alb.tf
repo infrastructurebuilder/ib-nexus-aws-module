@@ -47,7 +47,7 @@ resource "aws_lb_target_group" "nexus_core_tg" {
   }
 
   tags = {
-    Name   = "nexus-core-tg"
+    Name   = "${var.name_prefix}-core-tg"
     system = "nexus"
   }
 }
@@ -109,7 +109,7 @@ resource "aws_lb_listener" "nexus_core_listener" {
   }
 
   tags = {
-    Name   = "nexus-core-listener"
+    Name   = "${var.name_prefix}-core-listener"
     system = "nexus"
   }
 }
@@ -128,7 +128,7 @@ resource "aws_lb_listener" "nexus_docker_listener" {
   }
 
   tags = {
-    Name   = "nexus-docker-listener"
+    Name   = "${var.name_prefix}-docker-listener"
     system = "nexus"
   }
 }

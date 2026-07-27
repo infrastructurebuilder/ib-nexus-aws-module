@@ -11,15 +11,8 @@ variable "route53_zone_name" {
 variable "blobstore_bucket_name" {
   description = "The name of the S3 bucket to use for Nexus blob storage (must be globally unique, or leave empty to auto-generate)"
   type        = string
-  nullable    = true
-  default     = null
 }
 
-variable "blobstore_bucket_prefix" {
-  description = "Prefix for auto-generating a unique S3 bucket name for Nexus blob storage (used if blobstore_bucket_name is empty)"
-  type        = string
-  default     = "nexus-blobstore"
-}
 variable "domain_name" {
   description = "The domain name for the Nexus server (e.g., nexus) appended to the zone name"
   type        = string

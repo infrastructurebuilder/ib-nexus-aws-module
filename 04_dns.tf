@@ -16,7 +16,7 @@ resource "aws_acm_certificate" "nexus_cert" {
   }
 
   tags = {
-    Name   = "nexus-certificate"
+    Name   = "${var.name_prefix}-nexus-cert"
     system = "nexus"
   }
 }
