@@ -20,7 +20,9 @@ resource "aws_s3_bucket_versioning" "nexus_blobstore" {
   }
 }
 
-# Enable server-side encryption
+# Enable server-side encryption. SSE-S3 is a deliberate choice; switching to a
+# customer-managed KMS key (rotation, audit) is a possible future enhancement.
+#trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "nexus_blobstore" {
   bucket = aws_s3_bucket.nexus_blobstore.id
 

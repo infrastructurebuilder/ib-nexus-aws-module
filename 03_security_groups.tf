@@ -3,6 +3,9 @@
 # 3. SECURITY GROUPS
 # ==============================================================================
 
+# Unrestricted egress is intentional: the ALB forwards to targets and the WAF
+# handles inbound filtering.
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "alb_sg" {
   name_prefix = "${var.name_prefix}-alb-"
   description = "Allow inbound traffic for Nexus UI/Maven and Docker"
@@ -48,6 +51,9 @@ resource "aws_security_group" "alb_sg" {
   })
 }
 
+# Unrestricted egress is intentional: the instance must reach the internet via
+# NAT for dnf installs, docker pulls, and upstream repository proxying.
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group" "nexus_ec2_sg" {
   name_prefix = "${var.name_prefix}-ec2-"
   description = "Allow traffic from ALB to Nexus"

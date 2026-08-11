@@ -1,11 +1,19 @@
 # Changelog
 
+<!-- markdownlint-disable-file MD024 -->
+
 All notable changes to this module are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases are
 tagged with [Semantic Versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`)
 so consumers can pin `source = "...?ref=vX.Y.Z"`.
 
 ## [Unreleased]
+
+### Changed
+
+- The ALB now drops invalid HTTP header fields (trivy AWS-0052); remaining
+  HIGH/CRITICAL trivy findings are deliberate design choices, ignored inline
+  with justifications.
 
 ## [1.0.0] - 2026-08-11
 

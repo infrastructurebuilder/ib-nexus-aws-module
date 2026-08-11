@@ -3,6 +3,8 @@
 # 5. APPLICATION LOAD BALANCER & TARGET GROUPS
 # ==============================================================================
 
+# A public artifact server is the point of this module (WAF-protected).
+#trivy:ignore:AVD-AWS-0053
 resource "aws_lb" "nexus_alb" {
   name               = "${var.name_prefix}-alb"
   internal           = false
@@ -11,6 +13,7 @@ resource "aws_lb" "nexus_alb" {
   subnets            = data.aws_subnets.public.ids
 
   enable_deletion_protection = var.alb_deletion_protection
+  drop_invalid_header_fields = true
 
   dynamic "access_logs" {
     for_each = var.enable_alb_access_logs ? [1] : []
