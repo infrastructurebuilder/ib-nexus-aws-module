@@ -15,26 +15,25 @@ resource "aws_acm_certificate" "nexus_cert" {
     create_before_destroy = true
   }
 
-  tags = {
-    Name   = "${var.name_prefix}-nexus-cert"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-nexus-cert"
+  })
 }
 
+# The for_each key is the certificate's single domain — statically known, and
+# identical to the key the old dvo-derived for_each produced, so existing
+# state addresses are unchanged. Keeping the key static (rather than iterating
+# domain_validation_options directly) lets the expansion be resolved even when
+# the validation options themselves are unknown at plan time, e.g. under
+# mocked providers in `terraform test`.
 resource "aws_route53_record" "nexus_cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.nexus_cert.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
+  for_each = toset([local.full_domain_name])
 
   allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
+  name            = [for dvo in aws_acm_certificate.nexus_cert.domain_validation_options : dvo.resource_record_name if dvo.domain_name == each.value][0]
+  records         = [for dvo in aws_acm_certificate.nexus_cert.domain_validation_options : dvo.resource_record_value if dvo.domain_name == each.value]
   ttl             = 60
-  type            = each.value.type
+  type            = [for dvo in aws_acm_certificate.nexus_cert.domain_validation_options : dvo.resource_record_type if dvo.domain_name == each.value][0]
   zone_id         = data.aws_route53_zone.main.zone_id
 }
 

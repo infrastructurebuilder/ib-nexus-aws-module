@@ -7,10 +7,9 @@ resource "aws_eip" "nat_eip" {
   count  = var.manage_private_routing ? 1 : 0
   domain = "vpc"
 
-  tags = {
-    Name   = "${var.name_prefix}-nat-eip"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-nat-eip"
+  })
 }
 
 resource "aws_nat_gateway" "nexus_nat" {
@@ -18,10 +17,9 @@ resource "aws_nat_gateway" "nexus_nat" {
   allocation_id = aws_eip.nat_eip[0].id
   subnet_id     = data.aws_subnets.public.ids[0]
 
-  tags = {
-    Name   = "${var.name_prefix}-nat-gateway"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-nat-gateway"
+  })
 }
 
 resource "aws_route_table" "private_rt" {
@@ -33,10 +31,9 @@ resource "aws_route_table" "private_rt" {
     nat_gateway_id = aws_nat_gateway.nexus_nat[0].id
   }
 
-  tags = {
-    Name   = "${var.name_prefix}-private-route-table"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-private-route-table"
+  })
 }
 
 # Associate only the subnet the Nexus instance actually lives in, rather than

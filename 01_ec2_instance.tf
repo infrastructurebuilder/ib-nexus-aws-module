@@ -1,19 +1,36 @@
 locals {
   ami_id = var.ami_id != null ? var.ami_id : data.aws_ami.al2023[0].id
 
-  common_tags = merge(var.tags, {
-    Name      = var.instance_name
+  # Caller tags plus module-wide markers; merged (with a per-resource Name)
+  # onto every taggable resource in the module.
+  base_tags = merge(var.tags, {
     ManagedBy = "terraform"
     system    = "nexus"
   })
 
+  common_tags = merge(local.base_tags, {
+    Name = var.instance_name
+  })
+
   sorted_subnet_ids = sort(data.aws_subnets.private.ids)
 
+  # Every port in the reserved Docker block, as strings for for_each keys.
+  docker_ports = toset([
+    for p in range(var.docker_port_block.from, var.docker_port_block.to + 1) : tostring(p)
+  ])
 
-  # Build docker run port arguments
+  # Build docker run port arguments. The Docker block is published with an
+  # identity mapping (host N -> container N) so a connector configured on port
+  # N inside Nexus is reachable at ALB port N with no translation.
+  docker_block_flag = (
+    var.docker_port_block.from == var.docker_port_block.to
+    ? "-p ${var.docker_port_block.from}:${var.docker_port_block.from}"
+    : "-p ${var.docker_port_block.from}-${var.docker_port_block.to}:${var.docker_port_block.from}-${var.docker_port_block.to}"
+  )
+
   port_flags = join(" ", concat(
     ["-p ${var.nexus_port}:8081"],
-    ["-p ${var.docker_port}:8082"],
+    [local.docker_block_flag],
     [for p in var.additional_ports : "-p ${p.host}:${p.container}"]
   ))
 
@@ -123,15 +140,40 @@ data "cloudinit_config" "nexus" {
           --query SecretString --output text)" > "$NEXUS_ENV_FILE"
 
       # --- Pull and run Nexus ---
+      # The container is created once here; later config changes require
+      # replacing the instance (or docker rm -f + docker run over SSM). The
+      # restart policy covers daemon restarts and reboots.
       docker pull ${var.image}
       docker run -d \
         --name ${var.container_name} \
         --restart ${var.restart_policy} \
+        --log-opt max-size=100m \
+        --log-opt max-file=3 \
         --env-file "$NEXUS_ENV_FILE" \
         ${local.port_flags} \
         ${local.env_flags} \
         -v "$DATA_MOUNT":/nexus-data \
         ${var.image}
+
+      # docker run copies the env file's contents into the container config;
+      # the file itself is only needed for that one call, so destroy it rather
+      # than leave the initial password on the root volume.
+      shred -u "$NEXUS_ENV_FILE" 2>/dev/null || rm -f "$NEXUS_ENV_FILE"
+      %{~if var.enable_monitoring}
+
+      # --- CloudWatch agent (data-volume disk metrics) ---
+      # Publishes disk_used_percent for /data/nexus, aggregated to
+      # InstanceId+path dimensions to match the alarm in 12_monitoring.tf.
+      # Written via printf (not a heredoc): this outer script renders with its
+      # source indentation intact, which would prevent a nested heredoc
+      # terminator from ever matching.
+      dnf install -y amazon-cloudwatch-agent
+      printf '%s\n' '{"metrics":{"namespace":"CWAgent","append_dimensions":{"InstanceId":"$${aws:InstanceId}"},"aggregation_dimensions":[["InstanceId","path"]],"metrics_collected":{"disk":{"resources":["/data/nexus"],"measurement":["used_percent"],"metrics_collection_interval":60}}}}' \
+        > /opt/aws/amazon-cloudwatch-agent/etc/config.json
+      /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+        -a fetch-config -m ec2 -s \
+        -c file:/opt/aws/amazon-cloudwatch-agent/etc/config.json
+      %{~endif}
     USERDATA
   }
 }
@@ -167,6 +209,26 @@ resource "aws_instance" "nexus_server" {
     encrypted   = true
   }
 
+  lifecycle {
+    precondition {
+      condition     = length(data.aws_subnets.private.ids) > 0
+      error_message = "No private subnets found: the VPC must contain at least one subnet tagged Tier = \"Private\" for the Nexus instance."
+    }
+
+    precondition {
+      condition     = var.nexus_port < var.docker_port_block.from || var.nexus_port > var.docker_port_block.to
+      error_message = "nexus_port must not fall inside docker_port_block."
+    }
+
+    precondition {
+      condition = alltrue([
+        for p in var.additional_ports :
+        p.host != var.nexus_port && (p.host < var.docker_port_block.from || p.host > var.docker_port_block.to)
+      ])
+      error_message = "additional_ports host values must not collide with nexus_port or fall inside docker_port_block."
+    }
+  }
+
   tags = local.common_tags
 }
 
@@ -180,8 +242,12 @@ resource "aws_ebs_volume" "nexus_data" {
   type              = var.data_volume_type
   encrypted         = true
 
+  # DlmBackup is the targeting tag for the snapshot policy in 11_backups.tf.
+  # Applied even when backups are disabled so enabling them later is a no-op
+  # for the volume itself.
   tags = merge(local.common_tags, {
-    Name = "${var.instance_name}-data"
+    Name      = "${var.instance_name}-data"
+    DlmBackup = "${var.name_prefix}-nexus-data"
   })
 }
 

@@ -2,8 +2,18 @@
 # 1. DATA SOURCES
 # ==============================================================================
 
+# Pre-existing bucket for ALB access logs; only looked up when logging is
+# enabled, so the bucket (and its name) are not required otherwise.
 data "aws_s3_bucket" "alb_logs" {
+  count  = var.enable_alb_access_logs ? 1 : 0
   bucket = var.alb_logs_bucket_name
+
+  lifecycle {
+    precondition {
+      condition     = var.alb_logs_bucket_name != null
+      error_message = "alb_logs_bucket_name must be set when enable_alb_access_logs is true."
+    }
+  }
 }
 
 data "aws_vpc" "main" {

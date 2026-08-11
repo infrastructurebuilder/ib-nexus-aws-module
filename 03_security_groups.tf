@@ -29,9 +29,9 @@ resource "aws_security_group" "alb_sg" {
   }
 
   ingress {
-    description = "Docker Registry V2 API"
-    from_port   = 5000
-    to_port     = 5000
+    description = "Docker registry connector port block"
+    from_port   = var.docker_port_block.from
+    to_port     = var.docker_port_block.to
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -43,10 +43,9 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name   = "${var.name_prefix}-alb-sg"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-alb-sg"
+  })
 }
 
 resource "aws_security_group" "nexus_ec2_sg" {
@@ -60,16 +59,16 @@ resource "aws_security_group" "nexus_ec2_sg" {
 
   ingress {
     description     = "Nexus Core traffic from ALB"
-    from_port       = 8081
-    to_port         = 8081
+    from_port       = var.nexus_port
+    to_port         = var.nexus_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
 
   ingress {
-    description     = "Nexus Docker traffic from ALB"
-    from_port       = 8082
-    to_port         = 8082
+    description     = "Nexus Docker connector port block from ALB"
+    from_port       = var.docker_port_block.from
+    to_port         = var.docker_port_block.to
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
@@ -82,8 +81,7 @@ resource "aws_security_group" "nexus_ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name   = "${var.name_prefix}-ec2-sg"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-ec2-sg"
+  })
 }

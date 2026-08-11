@@ -9,8 +9,21 @@ output "nexus_ui_url" {
 }
 
 output "nexus_docker_url" {
-  description = "The public HTTPS URL and port to use for 'docker login' and pulling/pushing images"
-  value       = "https://${aws_route53_record.nexus_alb_alias.name}:5000"
+  description = "Convenience HTTPS URL at the first port of the Docker block (the conventional home for the primary registry). See docker_registry_urls for the full block."
+  value       = "https://${aws_route53_record.nexus_alb_alias.name}:${var.docker_port_block.from}"
+}
+
+output "docker_registry_urls" {
+  description = "Map of every reserved Docker connector port to its public HTTPS URL. A repository claims a port by setting its connector's HTTP port to one of these keys."
+  value = {
+    for p in local.docker_ports :
+    p => "https://${aws_route53_record.nexus_alb_alias.name}:${p}"
+  }
+}
+
+output "docker_port_block" {
+  description = "The reserved Docker connector port range (from/to, inclusive), for downstream modules to validate their port choices against"
+  value       = var.docker_port_block
 }
 
 output "alb_dns_name" {
@@ -82,13 +95,19 @@ output "waf_log_group_name" {
   value       = aws_cloudwatch_log_group.nexus_waf.name
 }
 
+# --- Backups ---
+output "data_volume_backup_policy_id" {
+  description = "ID of the DLM lifecycle policy snapshotting the Nexus data volume. Null when enable_data_volume_backups is false."
+  value       = one(aws_dlm_lifecycle_policy.nexus_data[*].id)
+}
+
 # --- ALB Access Logs ---
 output "alb_logs_bucket_name" {
   description = "Name of the S3 bucket receiving ALB access logs. Null when enable_alb_access_logs is false."
-  value       = data.aws_s3_bucket.alb_logs.bucket
+  value       = one(data.aws_s3_bucket.alb_logs[*].bucket)
 }
 
 output "alb_logs_bucket_arn" {
   description = "ARN of the S3 bucket receiving ALB access logs. Null when enable_alb_access_logs is false."
-  value       = data.aws_s3_bucket.alb_logs.arn
+  value       = one(data.aws_s3_bucket.alb_logs[*].arn)
 }

@@ -145,10 +145,9 @@ resource "aws_wafv2_web_acl" "nexus" {
     sampled_requests_enabled   = true
   }
 
-  tags = {
-    Name   = "${var.name_prefix}-waf"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-waf"
+  })
 }
 
 resource "aws_wafv2_web_acl_association" "nexus_alb" {
@@ -163,10 +162,9 @@ resource "aws_cloudwatch_log_group" "nexus_waf" {
   name              = "aws-waf-logs-${var.name_prefix}"
   retention_in_days = var.waf_log_retention_days
 
-  tags = {
-    Name   = "${var.name_prefix}-aws-waf-logs"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-aws-waf-logs"
+  })
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "nexus" {

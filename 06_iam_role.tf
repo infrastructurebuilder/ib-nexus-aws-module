@@ -19,10 +19,9 @@ resource "aws_iam_role" "nexus_role" {
     ]
   })
 
-  tags = {
-    Name   = "${var.name_prefix}-ec2-role"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-ec2-role"
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "nexus_ssm_policy" {
@@ -56,8 +55,7 @@ resource "aws_iam_instance_profile" "nexus_profile" {
   name = "${var.name_prefix}-instance-profile"
   role = aws_iam_role.nexus_role.name
 
-  tags = {
-    Name   = "${var.name_prefix}-instance-profile"
-    system = "nexus"
-  }
+  tags = merge(local.base_tags, {
+    Name = "${var.name_prefix}-instance-profile"
+  })
 }
