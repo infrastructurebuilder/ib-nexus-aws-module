@@ -1,4 +1,7 @@
 
+# Deliberately unused: kept only so existing callers that still pass it don't
+# break. Remove in the next major version.
+# tflint-ignore: terraform_unused_declarations
 variable "external_random_id" {
   description = "DEPRECATED: no longer used by this module (callers embed their own uniqueness in the bucket-name inputs). Accepted for backward compatibility; will be removed in a future major version."
   type        = string
