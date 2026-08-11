@@ -7,6 +7,14 @@ so consumers can pin `source = "...?ref=vX.Y.Z"`.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-11
+
+First stable release: complete infrastructure for a single-instance Sonatype
+Nexus on EC2/Docker behind a TLS ALB with WAF, S3 blobstore, reserved Docker
+connector port block, opt-in backups and monitoring, tests, and CI. The
+entries below describe the changes leading up to this release relative to
+the unversioned module.
+
 ### BREAKING
 
 - The single Docker path (`docker_port` variable, hardcoded `:5000` ALB

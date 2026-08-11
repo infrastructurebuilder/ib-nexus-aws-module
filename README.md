@@ -214,7 +214,13 @@ configuration (the companion repos/users module automates most of this):
   [.terraform-docs.yml](.terraform-docs.yml)), or let pre-commit do it
   (`pre-commit install`).
 - Releases are tagged `vX.Y.Z` (see [CHANGELOG.md](CHANGELOG.md)); consumers
-  should pin `source = "...?ref=vX.Y.Z"`.
+  should pin `source = "...?ref=vX.Y.Z"` — always a tag, never a branch.
+  Release tags are protected against moves and deletion.
+- To release: move the `[Unreleased]` CHANGELOG section under a new
+  `## [X.Y.Z] - date` heading, land that on `master`, then run
+  `just release X.Y.Z`. The [Release workflow](.github/workflows/release.yml)
+  validates the tag, re-runs the test suite, and publishes a GitHub Release
+  using that changelog section as its notes.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

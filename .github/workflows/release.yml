@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: publish GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+            || { echo "::error::tag $GITHUB_REF_NAME is not vX.Y.Z"; exit 1; }
+
+      - name: Ensure tagged commit is on master
+        run: |
+          git fetch origin master
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/master \
+            || { echo "::error::tagged commit $GITHUB_SHA is not on master"; exit 1; }
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      # Tags can be pushed without a PR, so re-verify the module here rather
+      # than trusting that CI already ran on this commit.
+      - name: Verify module
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false -input=false
+          terraform validate
+          terraform test
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v ver="$v" '
+            $0 ~ "^## \\[" ver "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > /tmp/notes.md
+          grep -q '[^[:space:]]' /tmp/notes.md \
+            || { echo "::error::CHANGELOG.md has no populated ## [$v] section"; exit 1; }
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file /tmp/notes.md \
+            --latest
