@@ -22,5 +22,15 @@ override.tf.json
 # CLI config
 .terraformrc
 terraform.rc
-# 
+#
 P*.md
+
+# Spec Kit files are tracked. On a case-insensitive checkout the rule above
+# would otherwise catch plan-template.md and every feature's plan.md.
+!/.specify/**
+!/specs/**
+
+# Agent folder: share only the Spec Kit skills. Anything else an agent
+# writes there (settings, credentials) stays local.
+/.claude/*
+!/.claude/skills
