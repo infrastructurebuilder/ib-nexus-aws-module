@@ -14,6 +14,12 @@ so consumers can pin `source = "...?ref=vX.Y.Z"`.
 - The ALB now drops invalid HTTP header fields (trivy AWS-0052); remaining
   HIGH/CRITICAL trivy findings are deliberate design choices, ignored inline
   with justifications.
+- The default branch is now `main`, and `master` has been removed. Keep
+  pinning a release tag (`?ref=vX.Y.Z`); a source that named `?ref=master` no
+  longer resolves.
+- Development follows git-flow: features land on `develop`, and releases are
+  staged on a `release/X.Y.Z` branch and finished into `main`. CI now runs on
+  pushes to `main` and `develop`.
 
 ## [1.0.0] - 2026-08-11
 

@@ -216,11 +216,20 @@ configuration (the companion repos/users module automates most of this):
 - Releases are tagged `vX.Y.Z` (see [CHANGELOG.md](CHANGELOG.md)); consumers
   should pin `source = "...?ref=vX.Y.Z"` — always a tag, never a branch.
   Release tags are protected against moves and deletion.
-- To release: move the `[Unreleased]` CHANGELOG section under a new
-  `## [X.Y.Z] - date` heading, land that on `master`, then run
-  `just release X.Y.Z`. The [Release workflow](.github/workflows/release.yml)
-  validates the tag, re-runs the test suite, and publishes a GitHub Release
-  using that changelog section as its notes.
+- Branches follow git-flow. Work lands on `develop` through `feature/<name>`
+  branches; `main` is the default branch and moves only when a release is
+  finished into it. CI runs on pushes to both and on pull requests.
+- To release:
+  1. Start a release branch from `develop` (`git flow release start X.Y.Z`)
+     and move the `[Unreleased]` CHANGELOG section under a new
+     `## [X.Y.Z] - date` heading on it.
+  2. Finish it into `main` without a git-flow tag
+     (`git flow release finish X.Y.Z --notag --push`). That also brings
+     `develop` up to date with `main`.
+  3. Switch to `main` and run `just release X.Y.Z`, which creates and pushes
+     the `vX.Y.Z` tag. The [Release workflow](.github/workflows/release.yml)
+     validates the tag, re-runs the test suite, and publishes a GitHub Release
+     using that changelog section as its notes.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
