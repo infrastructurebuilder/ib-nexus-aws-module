@@ -8,8 +8,8 @@ release version:
     v="{{ version }}"
     [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must be X.Y.Z (no leading v)" >&2; exit 1; }
     [ -z "$(git status --porcelain)" ] || { echo "working tree is dirty" >&2; exit 1; }
-    git fetch origin master
-    [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)" ] || { echo "HEAD must match pushed origin/master" >&2; exit 1; }
+    git fetch origin main
+    [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "HEAD must match pushed origin/main" >&2; exit 1; }
     grep -q "^## \[$v\]" CHANGELOG.md || { echo "CHANGELOG.md has no ## [$v] section" >&2; exit 1; }
     git tag -a "v$v" -m "v$v"
     git push origin "v$v"

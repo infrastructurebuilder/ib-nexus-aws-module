@@ -93,9 +93,8 @@ to prove itself.
   integration branch, `develop`.
 - Releases follow git-flow. A release is staged on a `release/<version>` branch and
   finished into `main`, where it is tagged. `main` is the production branch.
-- The `master` branch is retired in favour of `main`, and nothing new may be based on it.
-  Until the release recipe, the release workflow and branch protection have been moved to
-  `main`, releases are still cut from `master`.
+- The `master` branch is retired and replaced by `main`. Nothing may be based on `master`
+  or pin it as a ref.
 - Plans are not tracked in this repo. A root `PLAN.md` is a maintainer's local file and
   stays gitignored. The tracked record of a feature is its `specs/<NNN-name>/` directory.
 
@@ -111,4 +110,4 @@ to prove itself.
   that is accepted MUST be justified in the plan's Complexity Tracking table.
 - Day-to-day usage and operating guidance belongs in `README.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-20 | **Last Amended**: 2026-11-20
+**Version**: 1.0.1 | **Ratified**: 2026-11-20 | **Last Amended**: 2026-11-20
